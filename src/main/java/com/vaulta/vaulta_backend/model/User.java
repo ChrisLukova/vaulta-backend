@@ -33,7 +33,7 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private String role; // USER // ADMIN / SUPPORT
+    private Role role; // USER // ADMIN / SUPPORT
 
     @Column(nullable = false, length = 20)
     private String status; // ACTIVE, LOCKED, SUSPENDED
