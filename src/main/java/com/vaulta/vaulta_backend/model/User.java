@@ -1,30 +1,43 @@
 package com.vaulta.vaulta_backend.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-@Data
+@Entity
+@Table(
+        name = "users",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = "username"),
+                @UniqueConstraint(columnNames = "email")
+        }
+ )
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
-@Table(name = "users")
+@Builder
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false, length = 50)
     private String username;
 
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false, length = 100)
     private String email;
 
-    private String password; // will be hashed later
+    @Column(nullable = false)
+    private String password; // will store BCrypt hash
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
     private String role; // USER // ADMIN / SUPPORT
 
-    private String status = "ACTIVE"; // default
+    @Column(nullable = false, length = 20)
+    private String status; // ACTIVE, LOCKED, SUSPENDED
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Wallet wallet;
 }
