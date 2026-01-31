@@ -4,11 +4,12 @@ import com.vaulta.vaulta_backend.model.User;
 import com.vaulta.vaulta_backend.model.Wallet;
 import com.vaulta.vaulta_backend.repository.WalletRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.Optional;
 
 @Service
+@Transactional
 public class WalletService {
 
     private final WalletRepository walletRepository;
@@ -29,9 +30,10 @@ public class WalletService {
     }
 
     // Helper: get wallet by user
+    @Transactional(readOnly = true)
     public Wallet getWalletByUser(User user) {
-        Optional<Wallet> wallet = walletRepository.findByUser(user);
-        return wallet.orElseThrow(() -> new RuntimeException("Wallet not found"));
+        return walletRepository.findByUser(user)
+                .orElseThrow(() -> new RuntimeException("Wallet not found"));
     }
 
     // Deposit funds
@@ -44,6 +46,12 @@ public class WalletService {
     // Withdraw funds
     public Wallet withdraw(User user, BigDecimal amount) {
         Wallet wallet = getWalletByUser(user);
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new RuntimeException("Withdrawal amount must be greater than zero");
+        }
+        if (!"ACTIVE".equals(wallet.getStatus())) {
+            throw new RuntimeException("Wallet is frozen!");
+        }
         if (wallet.getBalance().compareTo(amount) < 0) {
             throw new RuntimeException("Insufficient funds");
         }
