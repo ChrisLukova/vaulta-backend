@@ -4,6 +4,7 @@ package com.vaulta.vaulta_backend.controller;
 import com.vaulta.vaulta_backend.dto.AuthResponse;
 import com.vaulta.vaulta_backend.dto.LoginRequest;
 import com.vaulta.vaulta_backend.dto.RegisterRequest;
+import com.vaulta.vaulta_backend.exception.UserNotFoundException;
 import com.vaulta.vaulta_backend.model.User;
 import com.vaulta.vaulta_backend.security.JwtUtil;
 import com.vaulta.vaulta_backend.service.UserService;
@@ -54,11 +55,11 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         User user = userService.findByUsername(request.username())
-                .orElseThrow(() -> new RuntimeException("Invalid username or password"));
+                .orElseThrow(() -> new UserNotFoundException("Invalid username or password"));
 
         // Check password
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
-            throw new RuntimeException("Invalid username or password");
+            throw new UserNotFoundException("Invalid username or password");
         }
 
         String token = jwtUtil.generateToken(user.getUsername());
