@@ -1,5 +1,7 @@
 package com.vaulta.vaulta_backend.service;
 
+import com.vaulta.vaulta_backend.exception.UserAlreadyExistsException;
+import com.vaulta.vaulta_backend.exception.UserNotFoundException;
 import com.vaulta.vaulta_backend.model.Role;
 import com.vaulta.vaulta_backend.model.User;
 import com.vaulta.vaulta_backend.model.Wallet;
@@ -30,10 +32,10 @@ public class UserService {
     public User registerUser(String username, String email, String rawPassword) {
         //check if username or email exists
         if (userRepository.existsByUsername(username)) {
-            throw new RuntimeException("Username already taken");
+            throw new UserAlreadyExistsException("Username already taken");
         }
         if (userRepository.existsByEmail(email)) {
-            throw new RuntimeException("Email already taken");
+            throw new UserAlreadyExistsException("Email already taken");
         }
 
         User user = new User();
@@ -60,5 +62,11 @@ public class UserService {
     // Find by email
     public Optional<User> findByEmail(String email) {
         return userRepository.findByEmail(email);
+    }
+
+    // Get user or throw exception
+    public User getUserByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException("User not found with username: " + username));
     }
 }
