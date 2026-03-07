@@ -26,10 +26,7 @@ public class WalletController {
     // GET wallet info of logged-in user
     @GetMapping
     public ResponseEntity<WalletResponse> getWallet(Authentication authentication) {
-        String username = authentication.getName();
-        User user = userService.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
+        User user = userService.getUserByUsername(authentication.getName());
         Wallet wallet = walletService.getWalletByUser(user);
 
         return ResponseEntity.ok(
@@ -43,13 +40,8 @@ public class WalletController {
             Authentication authentication,
             @RequestParam BigDecimal amount
             ) {
-        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new RuntimeException("Deposit amount must be positive");
-        }
 
-        String username = authentication.getName();
-        User user = userService.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userService.getUserByUsername(authentication.getName());
 
         Wallet wallet = walletService.deposit(user, amount);
 
@@ -64,10 +56,8 @@ public class WalletController {
             Authentication authentication,
             @RequestParam BigDecimal amount
     ) {
-        String username = authentication.getName();
 
-        User user = userService.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found!"));
+        User user = userService.getUserByUsername(authentication.getName());
 
         Wallet wallet = walletService.withdraw(user, amount);
 
