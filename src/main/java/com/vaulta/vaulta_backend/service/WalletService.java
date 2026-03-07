@@ -1,5 +1,8 @@
 package com.vaulta.vaulta_backend.service;
 
+import com.vaulta.vaulta_backend.exception.InsufficientFundsException;
+import com.vaulta.vaulta_backend.exception.InvalidAmountException;
+import com.vaulta.vaulta_backend.exception.WalletNotFoundException;
 import com.vaulta.vaulta_backend.model.User;
 import com.vaulta.vaulta_backend.model.Wallet;
 import com.vaulta.vaulta_backend.repository.WalletRepository;
@@ -33,12 +36,21 @@ public class WalletService {
     @Transactional(readOnly = true)
     public Wallet getWalletByUser(User user) {
         return walletRepository.findByUser(user)
-                .orElseThrow(() -> new RuntimeException("Wallet not found"));
+                .orElseThrow(() -> new WalletNotFoundException("Wallet not found"));
     }
 
     // Deposit funds
     public Wallet deposit(User user, BigDecimal amount) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new InvalidAmountException("Deposit amount must be greater than zero!");
+        }
+
         Wallet wallet = getWalletByUser(user);
+
+        if (!"ACTIVE".equals(wallet.getStatus())) {
+            throw new InvalidAmountException("Wallet is frozen");
+        }
+
         wallet.setBalance(wallet.getBalance().add(amount));
         return walletRepository.save(wallet);
     }
@@ -47,14 +59,15 @@ public class WalletService {
     public Wallet withdraw(User user, BigDecimal amount) {
         Wallet wallet = getWalletByUser(user);
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new RuntimeException("Withdrawal amount must be greater than zero");
+            throw new InvalidAmountException("Withdrawal amount must be greater than zero");
         }
         if (!"ACTIVE".equals(wallet.getStatus())) {
-            throw new RuntimeException("Wallet is frozen!");
+            throw new InvalidAmountException("Wallet is frozen!");
         }
         if (wallet.getBalance().compareTo(amount) < 0) {
-            throw new RuntimeException("Insufficient funds");
+            throw new InsufficientFundsException("Insufficient funds for withdrawal");
         }
+
         wallet.setBalance(wallet.getBalance().subtract(amount));
         return walletRepository.save(wallet);
     }
